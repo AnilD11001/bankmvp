@@ -1,0 +1,9 @@
+# Ignore IntelliJ project files
+.idea/
+*.iml
+
+# Ignore Gradle wrapper jar (optional)
+gradle/wrapper/gradle-wrapper.jar
+
+# Ignore build output
+/build/
