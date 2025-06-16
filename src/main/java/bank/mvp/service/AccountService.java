@@ -1,5 +1,7 @@
 package bank.mvp.service;
 
+import bank.mvp.dto.JwtResponse;
+import bank.mvp.dto.LoginRequestDto;
 import bank.mvp.entity.AppUser;
 import bank.mvp.entity.BankAccount;
 import bank.mvp.entity.Transaction;
@@ -8,13 +10,22 @@ import bank.mvp.repository.BankAccountRepository;
 import bank.mvp.repository.TransactionRepository;
 import bank.mvp.repository.UserRepository;
 import bank.mvp.repository.WalletRepository;
+import bank.mvp.security.jwt.JwtUtils;
+import bank.mvp.security.service.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AccountService {
@@ -22,9 +33,35 @@ public class AccountService {
     private UserRepository userRepo;
     @Autowired
     PasswordEncoder encoder;
-    @Autowired private BankAccountRepository bankRepo;
-    @Autowired private WalletRepository walletRepo;
-    @Autowired private TransactionRepository txnRepo;
+    @Autowired
+    private BankAccountRepository bankRepo;
+    @Autowired
+    private WalletRepository walletRepo;
+    @Autowired
+    private TransactionRepository txnRepo;
+    @Autowired
+    JwtUtils jwtUtils;
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    public ResponseEntity<JwtResponse> authenticateUserWithToken(LoginRequestDto loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = jwtUtils.generateJwtToken(authentication);
+
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(item -> item.getAuthority())
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new JwtResponse(jwt,
+                userDetails.getId(),
+                userDetails.getUsername(),
+                userDetails.getEmail(),
+                roles));
+    }
 
     public BankAccount openAccount(AppUser user) {
         user.setPassword(encoder.encode(user.getPassword()));
