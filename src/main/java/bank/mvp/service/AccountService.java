@@ -1,17 +1,12 @@
 package bank.mvp.service;
 
-import bank.mvp.dto.JwtResponse;
-import bank.mvp.dto.LoginRequestDto;
-import bank.mvp.entity.AppUser;
-import bank.mvp.entity.BankAccount;
-import bank.mvp.entity.Transaction;
-import bank.mvp.entity.Wallet;
-import bank.mvp.repository.BankAccountRepository;
-import bank.mvp.repository.TransactionRepository;
-import bank.mvp.repository.UserRepository;
-import bank.mvp.repository.WalletRepository;
+import bank.mvp.dto.*;
+import bank.mvp.dto.Currency;
+import bank.mvp.entity.*;
+import bank.mvp.repository.*;
 import bank.mvp.security.jwt.JwtUtils;
 import bank.mvp.security.service.UserDetailsImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,8 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +33,8 @@ public class AccountService {
     private WalletRepository walletRepo;
     @Autowired
     private TransactionRepository txnRepo;
+    @Autowired
+    private InternationalTransferDetailRepository transferDetailRepository;
     @Autowired
     JwtUtils jwtUtils;
     @Autowired
@@ -97,5 +93,37 @@ public class AccountService {
         bank.setBalance(bank.getBalance().add(amount));
         txnRepo.save(new Transaction(null, "DEBIT", "WALLET", amount, LocalDateTime.now(), null, wallet));
         txnRepo.save(new Transaction(null, "CREDIT", "BANK", amount, LocalDateTime.now(), bank, null));
+    }
+
+    public GetInternationalTransferDetailResponse getTransferDetails(Long referenceId) {
+       InternationalTransferDetail transferDetail = transferDetailRepository.findById(referenceId).orElseThrow(()-> new NoSuchElementException("No  details found"));
+        GetInternationalTransferDetailResponse response= new GetInternationalTransferDetailResponse();
+        BeanUtils.copyProperties(transferDetail,response);
+
+        InternalAccountFormat internalAccountFormat =new InternalAccountFormat();
+        internalAccountFormat.getBranch().put("code","00056");
+        internalAccountFormat.getBranch().put("designation","Paris");
+        Currency currency = new Currency();
+        currency.setAlphaCode("EUR");
+        currency.setNumericCode("978");
+        currency.setDesignation("EURO");
+        internalAccountFormat.setCurrency(currency);
+        internalAccountFormat.setSuffix("");
+        internalAccountFormat.setAccount("07797777206");
+        response.getTransferType().put("type", transferDetail.getTransferType().getType());
+        OrderingDto orderingDto=new OrderingDto();
+        orderingDto.getAccountClass().put("value", "222111");
+        orderingDto.getAccountClass().put("comparisonOperator", "EQUALS");
+        orderingDto.getAccountNumber().put("internalFormatAccountOurBranch",internalAccountFormat);
+        Customer customer = new Customer();
+        customer.setCustomerType("1");
+        customer.setNationalIdentifier("52522578828");
+        customer.getCustomer().put("customerNumber", "1000020027");
+        customer.getCustomer().put("displayedName", "Gabriel Pierre SIMONIN");
+        customer.getCustomerOfficer().put("code", "056");
+        customer.getCustomerOfficer().put("name", "PIERRE DAMIEN");
+        orderingDto.setCustomer(customer);
+        response.setOrdering(orderingDto);
+        return response;
     }
 }

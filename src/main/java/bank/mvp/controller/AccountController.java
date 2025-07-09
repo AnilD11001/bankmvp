@@ -1,5 +1,6 @@
 package bank.mvp.controller;
 
+import bank.mvp.dto.GetInternationalTransferDetailResponse;
 import bank.mvp.dto.JwtResponse;
 import bank.mvp.dto.LoginRequestDto;
 import bank.mvp.entity.AppUser;
@@ -52,8 +53,8 @@ public class AccountController {
         return ResponseEntity.ok("Transferred to bank");
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok("Testing...");
+    @GetMapping("/internationalTransfer/details")
+    public ResponseEntity<GetInternationalTransferDetailResponse> getTransferDetails(@RequestParam Long referenceId) {
+        return ResponseEntity.ok( service.getTransferDetails(referenceId));
     }
 }

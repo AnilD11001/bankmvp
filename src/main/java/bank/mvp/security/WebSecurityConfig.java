@@ -56,7 +56,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("*/signIn","*/open").permitAll()
+                        .requestMatchers("*/signIn","*/open","*/internationalTransfer/details").permitAll()
                         .anyRequest().authenticated()
                 )
                 .userDetailsService(userDetailsService)
