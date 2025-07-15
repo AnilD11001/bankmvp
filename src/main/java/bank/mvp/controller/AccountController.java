@@ -41,6 +41,11 @@ public class AccountController {
         return ResponseEntity.ok(service.openAccount(user));
     }
 
+    @PostMapping("/registerUser")
+    public ResponseEntity<AppUser> registerUser(@RequestBody AppUser user) {
+        return ResponseEntity.ok(service.registerUser(user));
+    }
+
     @PostMapping("/toWallet")
     public ResponseEntity<String> bankToWallet(@RequestParam String account, @RequestParam BigDecimal amount) {
         service.transferToWallet(account, amount);
@@ -54,7 +59,7 @@ public class AccountController {
     }
 
     @GetMapping("/internationalTransfer/details")
-    public ResponseEntity<GetInternationalTransferDetailResponse> getTransferDetails(@RequestParam Long referenceId) {
-        return ResponseEntity.ok( service.getTransferDetails(referenceId));
+    public ResponseEntity< List<GetInternationalTransferDetailResponse>> getTransferDetails(@RequestParam String referenceType) {
+        return ResponseEntity.ok( service.getTransferDetails(referenceType));
     }
 }

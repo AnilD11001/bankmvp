@@ -22,7 +22,7 @@ public class InternationalTransferDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String referenceId;
+    private String referenceType;
     private String refdos;
     @Enumerated(EnumType.STRING)
     private TransferType transferType;
@@ -38,9 +38,12 @@ public class InternationalTransferDetail {
 
     @ManyToOne
     private BankAccount  orderingBank;
-   @OneToOne
+   @ManyToOne
     private Currency currency;
     private BigDecimal amount;
+
+    @ManyToOne
+    private BankAccount beneficiaryBank;
 
     //    private Map<String, AccountNumber> correspondentBanking; //key: 'accountNumber'
 //    private BeneficiaryAddressBank beneficiaryAddressBank;

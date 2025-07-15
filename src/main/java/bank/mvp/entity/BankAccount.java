@@ -2,6 +2,7 @@ package bank.mvp.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
 import java.math.BigDecimal;
@@ -17,14 +18,15 @@ public class BankAccount {
     @Id
     private String accountNumber; // 16-char generated
     private String accountType;
+    private String accountId;
 
-    @OneToOne
+    @ManyToOne
     private AppUser user;
     private BigDecimal balance;
 //    private Long numberOfDecimals;
 
-    @OneToOne
+    @ManyToOne
     private Currency currency;
-    @OneToOne
+    @ManyToOne
     private Bank bank;
 }
