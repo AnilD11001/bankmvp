@@ -21,6 +21,7 @@ public class GetInternationalTransferDetailResponse {
     private String refdos;
     private Map<String, String> transferType = new HashMap<>(); //key:'type'
     private String nature;
+//    date with time
     private String executionDate;
     private String inputDate;
     private String bankValueDate;

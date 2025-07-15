@@ -53,12 +53,12 @@ public class WebSecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("*/signIn","*/open","*/internationalTransfer/details").permitAll()
-                        .anyRequest().authenticated()
-                )
+                    .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                    .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers("*/signIn","*/open").permitAll()
+                            .anyRequest().authenticated()
+                    )
                 .userDetailsService(userDetailsService)
                 .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 

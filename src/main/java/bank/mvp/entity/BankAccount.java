@@ -16,8 +16,15 @@ import lombok.NoArgsConstructor;
 public class BankAccount {
     @Id
     private String accountNumber; // 16-char generated
+    private String accountType;
 
     @OneToOne
     private AppUser user;
     private BigDecimal balance;
+//    private Long numberOfDecimals;
+
+    @OneToOne
+    private Currency currency;
+    @OneToOne
+    private Bank bank;
 }

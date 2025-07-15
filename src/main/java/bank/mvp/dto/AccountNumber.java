@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.Map;
 @Getter
 @Setter
@@ -13,6 +14,6 @@ import java.util.Map;
 
 public class AccountNumber {
 
-    private Map<String, String> externalFormatAccount; //key is 'value'
+    private Map<String, String> externalFormatAccount=new HashMap<>(); //key is 'value'
 
 }

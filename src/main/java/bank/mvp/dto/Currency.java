@@ -12,6 +12,6 @@ import lombok.Setter;
 
 public class Currency {
     private String alphaCode;
-    private String numericCode;
+    private Long numericCode;
     private String designation;
 }
