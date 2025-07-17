@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  bankmvp:
+    build:
+      context: ./bankmvp
+    ports:
+      - "8443:8443"
+    networks:
+      - bankmvp-net
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin
+      - NODE_ENV=production
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - bankmvp-net
+
+
+networks:
+  bankmvp-net:
+
+volumes:
+  n8n_data:
+
