@@ -3,6 +3,7 @@ package bank.mvp.service;
 import bank.mvp.dto.*;
 import bank.mvp.dto.Currency;
 import bank.mvp.entity.*;
+import bank.mvp.enums.TransferStatus;
 import bank.mvp.repository.*;
 import bank.mvp.security.jwt.JwtUtils;
 import bank.mvp.security.service.UserDetailsImpl;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,14 +79,21 @@ public class AccountService {
         return String.format("%04d%012d", user.getBank().getId(), user.getId());
     }
 
-    public void transferToWallet(String accountNumber, BigDecimal amount) {
+    @Transactional
+    public Map<String, TransferDetailsDTO> transferToWallet(String accountNumber, BigDecimal amount) {
         BankAccount bank = bankRepo.findByAccountNumber(accountNumber).orElseThrow(() -> new RuntimeException("BankAccount not found"));
         if (bank.getBalance().compareTo(amount) < 0) throw new RuntimeException("Insufficient funds");
         bank.setBalance(bank.getBalance().subtract(amount));
         Wallet wallet = walletRepo.findByBankAccount(bank).orElseThrow(() -> new RuntimeException("Wallet not found"));
         wallet.setBalance(wallet.getBalance().add(amount));
-        txnRepo.save(new Transaction(null, "DEBIT", "BANK", amount, LocalDateTime.now(), bank, null));
-        txnRepo.save(new Transaction(null, "CREDIT", "WALLET", amount, LocalDateTime.now(), null, wallet));
+        String referenceId= generateReferenceId();
+        txnRepo.save(new Transaction(null, referenceId, TransferStatus.ACCEPTED, amount, LocalDateTime.now(), bank, null,null,wallet));
+
+//        prepare response
+        Map<String, TransferDetailsDTO> response = new HashMap<>();
+        response.put("bankDetails",new TransferDetailsDTO("DEBIT",amount,bank.getBalance(),bank.getAccountNumber(),referenceId,bank.getUser().getEmail()));
+        response.put("walletDetails",new TransferDetailsDTO("CREDIT",amount,wallet.getBalance(),null,referenceId, bank.getUser().getEmail()));
+        return response;
     }
 
 
@@ -94,8 +103,8 @@ public class AccountService {
         wallet.setBalance(wallet.getBalance().subtract(amount));
         BankAccount bank = wallet.getBankAccount();
         bank.setBalance(bank.getBalance().add(amount));
-        txnRepo.save(new Transaction(null, "DEBIT", "WALLET", amount, LocalDateTime.now(), null, wallet));
-        txnRepo.save(new Transaction(null, "CREDIT", "BANK", amount, LocalDateTime.now(), bank, null));
+//        txnRepo.save(new Transaction(null, "DEBIT", "WALLET", amount, LocalDateTime.now(), null, wallet));
+//        txnRepo.save(new Transaction(null, "CREDIT", "BANK", amount, LocalDateTime.now(), bank, null));
     }
 
     @Transactional
@@ -160,5 +169,36 @@ public class AccountService {
         user.setPassword(encoder.encode(user.getPassword()));
        userRepo.save(user);
         return  user;
+    }
+
+    @Transactional
+    public Map<String, TransferDetailsDTO> bankToBank(String senderAccountNumber,String receiverAccountNumber, BigDecimal amount) {
+        BankAccount sender = bankRepo.findByAccountNumber(senderAccountNumber).orElseThrow(() -> new RuntimeException("Bank details not found"));
+        if (sender.getBalance().compareTo(amount) < 0)
+            throw new RuntimeException("Insufficient Bank funds");
+        sender.setBalance(sender.getBalance().subtract(amount));
+        bankRepo.save(sender);
+        BankAccount receiver = bankRepo.findByAccountNumber(receiverAccountNumber).orElseThrow(() -> new RuntimeException("Bank details not found"));
+        receiver.setBalance(receiver.getBalance().add(amount));
+        bankRepo.save(receiver);
+        String referenceId= generateReferenceId();
+        txnRepo.save(new Transaction(null, referenceId, TransferStatus.ACCEPTED, amount, LocalDateTime.now(), sender, null,receiver,null));
+
+        Map<String, TransferDetailsDTO> response = new HashMap<>();
+        response.put("senderDetails",new TransferDetailsDTO("DEBIT",amount,sender.getBalance(),sender.getAccountNumber(),referenceId,sender.getUser().getEmail()));
+        response.put("receiverDetails",new TransferDetailsDTO("CREDIT",amount,receiver.getBalance(),receiver.getAccountNumber(),referenceId, receiver.getUser().getEmail()));
+        return response;
+    }
+
+    private String generateReferenceId() {
+        String prefix = "TRF";
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
+        // Generate a 5-digit random number (padded with zeros if needed)
+        int randomNumber = new Random().nextInt(100_000); // 0 to 999999
+        String randomPart = String.format("%05d", randomNumber); // zero-padded
+
+        return prefix.toUpperCase() + timestamp + randomPart;
+
+
     }
 }

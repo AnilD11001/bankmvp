@@ -1,5 +1,6 @@
 package bank.mvp.entity;
 
+import bank.mvp.enums.TransferStatus;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -16,14 +17,34 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String type; // "DEBIT" or "CREDIT"
-    private String source; // "WALLET" or "BANK"
+    @Column(nullable = false, unique = true, length = 20)
+    private String referenceId;  //  prefix-dateTime-random
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TransferStatus status;
     private BigDecimal amount;
     private LocalDateTime timestamp;
 
     @ManyToOne
-    private BankAccount bankAccount;
+    @JoinColumn(name = "source_bank_account_id")
+    private BankAccount sourceBankAccount;
 
     @ManyToOne
-    private Wallet wallet;
+    @JoinColumn(name = "source_wallet_id")
+    private Wallet sourceWallet;
+
+    // Destination: Either a BankAccount or Wallet
+    @ManyToOne
+    @JoinColumn(name = "destination_bank_account_id")
+    private BankAccount destinationBankAccount;
+
+    @ManyToOne
+    @JoinColumn(name = "destination_wallet_id")
+    private Wallet destinationWallet;
+
+    @PrePersist
+    protected void onCreate() {
+        this.timestamp = LocalDateTime.now();
+    }
 }

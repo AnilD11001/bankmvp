@@ -3,6 +3,7 @@ package bank.mvp.controller;
 import bank.mvp.dto.GetInternationalTransferDetailResponse;
 import bank.mvp.dto.JwtResponse;
 import bank.mvp.dto.LoginRequestDto;
+import bank.mvp.dto.TransferDetailsDTO;
 import bank.mvp.entity.AppUser;
 import bank.mvp.entity.BankAccount;
 import bank.mvp.security.jwt.JwtUtils;
@@ -20,6 +21,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -47,9 +49,8 @@ public class AccountController {
     }
 
     @PostMapping("/toWallet")
-    public ResponseEntity<String> bankToWallet(@RequestParam String account, @RequestParam BigDecimal amount) {
-        service.transferToWallet(account, amount);
-        return ResponseEntity.ok("Transferred to wallet");
+    public ResponseEntity<Map<String, TransferDetailsDTO>> bankToWallet(@RequestParam String account, @RequestParam BigDecimal amount) {
+        return ResponseEntity.ok(service.transferToWallet(account, amount));
     }
 
     @PostMapping("/toBank")
@@ -61,5 +62,10 @@ public class AccountController {
     @GetMapping("/internationalTransfer/details")
     public ResponseEntity< List<GetInternationalTransferDetailResponse>> getTransferDetails(@RequestParam String referenceType) {
         return ResponseEntity.ok( service.getTransferDetails(referenceType));
+    }
+
+    @PostMapping("/bankTransfer")
+    public ResponseEntity<Map<String, TransferDetailsDTO>> bankToBank(@RequestParam String senderAccount, @RequestParam String receiverAccount, @RequestParam BigDecimal amount) {
+        return ResponseEntity.ok(service.bankToBank(senderAccount,receiverAccount, amount));
     }
 }
